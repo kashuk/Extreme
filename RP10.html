@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+
+<html>
+<body bgcolor="#FFFFF0">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Return Period - NY Counties</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<style type="text/css">
+<!--CSS HERE Start ================================================= -->
+#wrapper {
+	height: 500px;
+	width: 1000px;
+	margin: 0 auto;
+	padding: 0;
+}
+#container {
+	float: left;
+	height: 400px; 
+	width: 400px; 
+	margin: 10px;
+
+}
+#info {
+	float: left;
+	width: 350px;
+	padding-left: 20px;
+	margin: 10px 0 0 0;
+	border-left: 1px solid silver;
+
+}
+#foot {
+	float: bottom;
+	width: 400px;
+}
+
+#wrapper h1 {
+	text-align: left;
+	font-size: 150%;
+}
+#wrapper h5 {
+	text-align: left;
+	font-size: 75%;
+	font-weight: normal;
+}
+#info h2 {
+	display: inline;
+	font-size: 120%;
+	
+}
+
+#info h4 {
+	margin: 1em 0 0 0;
+	font-size: 100%;
+	font-weight: normal;
+}
+<!--CSS HERE End ################################################## -->
+		</style>
+		<script type="text/javascript">
+<!--JS HERE Start ================================================= -->
+$(function () {
+	Highcharts.setOptions({
+		colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
+	});
+	var cat= ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr'];			
+	var mapChart, RPchart, TSchart;
+	var data = [];
+			for (var code in counties) {
+				var value = null,
+					year,
+					itemData = counties[code].data,
+					i = itemData.length;
+					value = itemData[3]  // 100-yr return period
+					data.push({
+						name: counties[code].name,
+						code: code,
+						value: value,
+					});
+			}
+	var mapData = Highcharts.geojson(Highcharts.maps['countries/us/us-ny-all']);
+
+	/////////////////START Return Period Chart
+
+	// Wrap point.select to get to the total selected points
+	Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {   // Each time a change happen in map loop will restart
+		proceed.apply(this, Array.prototype.slice.call(arguments, 1));	
+		var points = mapChart.getSelectedPoints();
+		if (points.length) {	
+			try{  if (points.length === 1 && RPchart.series[0]) { 
+				RPchart = RPchart.destroy();TSchart = TSchart.destroy();}else{};  
+				} // reset both charts if switching between counties
+			catch(err) {true} // continue if couldn't rest  
+			if (!RPchart) {
+				RPchart = $('#RP-chart').highcharts({
+				chart: {
+					height: 500,
+					width: 500,
+					backgroundColor: '#FFFFF0',
+					spacingTop: 10,
+					spacingLeft: 0
+				},
+				credits: {
+					enabled: false
+				},
+				title: {
+					text:'Return Period - Precipitation'
+				},
+				subtitle: {
+					text: null
+				},
+				xAxis: {
+					tickPixelInterval: 50,
+					crosshair: true,
+					title: {text: 'Return Period'},
+					categories: ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr']
+				},
+				yAxis: {
+					max:12,
+					title:{text: 'Precipitation (in/day)'},
+					//opposite: true,
+				},
+				tooltip: {
+					shared: true,
+					valueSuffix: ' in/day'
+				},
+				plotOptions: {
+					series: {
+						animation: {
+							duration: 500
+						},
+						marker: {
+								enabled: true
+						},
+					}
+				}
+				}).highcharts();
+			}// end of "if (!RPchart)"
+			 if (points.length === 1) {	// check when margin mode
+				// add basic line
+				RPchart.addSeries({
+					name: points[0].name,
+					data: counties[points[0].code].data,
+					type:  'spline' ,
+				})
+				// add margin lines
+				var newdata=[];   
+				for (var ii = 0; ii < counties[points[0].code].data.length; ii++) {
+					newdata.push([cat[ii],rpl[points[0].code].data[ii],rpu[points[0].code].data[ii]])
+				}							
+				RPchart.addSeries({
+					name: 'Range',
+					data: newdata,
+					type:  'arearange' ,
+					lineWidth: 0.5,
+					fillOpacity: 0.3,
+					zIndex: 0
+				})
+				var oldLen=RPchart.series.length-1;                    
+			} 
+			else { 
+				while (RPchart.series.length >  points.length) {
+					RPchart.series[RPchart.series.length - 1].remove(false);
+				}
+				$.each(points, function (i) {
+					// Update multi lines								
+					if (RPchart.series[i]) {			
+						RPchart.series[i].update({
+							name: points[i].name,
+							data: counties[points[i].code].data,
+							type:'spline',
+							lineWidth: 2,
+						}, false);
+					} else {
+						RPchart.addSeries({
+							name: this.name,
+							data: counties[this.code].data,
+							type:  'spline',
+							lineWidth: 2,
+						});
+
+
+					}
+				});
+				//console.log(RPchart.series.length);alert(RPchart.series.length)		
+				while (RPchart.series.length >  points.length) {
+					RPchart.series[RPchart.series.length - 1].remove(false);
+				}
+			} // end of "if (points.length === 1) else"
+			RPchart.redraw();
+		} 
+		else {
+			if (RPchart) {
+				RPchart = RPchart.destroy();	
+			}
+		}//end of "if (points.length) else"
+	});
+
+	/////////////////END Return Period Chart
+
+	/////////////////START TS chart 
+
+	// Wrap point.select to get to the total selected points
+	Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed2) {
+		proceed2.apply(this, Array.prototype.slice.call(arguments, 1));
+		var points2 = mapChart.getSelectedPoints();
+		if (points2.length) {
+			if (!TSchart) {
+				TSchart = $('#TS-chart').highcharts({
+					chart: {
+						zoomType: 'x',		
+						height: 500,
+						width: 920,
+						backgroundColor: '#FFFFF0',
+						spacingTop: 10,
+						spacingLeft: 0
+					},
+					credits: {
+						enabled: false
+					},
+					title: {
+						text:'Extreme Precipitation (yearly)'
+					},
+					subtitle: {
+						text: null
+					},
+					xAxis: {
+						tickPixelInterval: 100,
+						crosshair: true,
+						title: {text: 'Return Period'},
+					},
+					yAxis: {
+						title:{text: 'Precipitation (in/day)'},
+						//opposite: true,
+					},
+					tooltip: {
+						shared: true,
+						valueSuffix: ' in/day'
+					},
+					plotOptions: {
+						series: {
+							animation: {
+								duration: 500
+							},
+							marker: {
+								enabled: true
+							},
+							pointStart: 1949,
+							pointInterval:1,
+						}
+					}
+				}).highcharts();
+			} // end of "if (!TSchart)"
+			$.each(points2, function (i) {
+				// Update multi lines
+				if (TSchart.series[i]) {
+					TSchart.series[i].update({
+						name: this.name,
+						data: ts[this.code].data,
+						type: 'spline',
+					}, false);
+				} 
+				else {
+					TSchart.addSeries({
+						name: this.name,
+						data: ts[this.code].data,
+						type: 'spline',
+						//type: points2.length >1 ? 'line' : 'area',
+					});
+				}
+			});
+			//TSchart.redraw();
+			//console.log(RPchart.series.length);
+			while (TSchart.series.length > points2.length) {
+				TSchart.series[TSchart.series.length - 1].remove(false);
+			}
+			TSchart.redraw();
+		}
+		else {
+			if (TSchart) {
+				TSchart = TSchart.destroy();
+			}
+		} // end of "if (points2.length) else"
+	});
+	/////////////////END TS chart 
+
+	/////////////////START the map 
+	mapChart = $('#container').highcharts('Map', {      // Initiate the map chart     
+		title : {
+			text : 'Precipitation'
+		},
+		subtitle : {
+			text : '100-Year Retun Period'
+		},
+		chart : {
+			backgroundColor: '#FFFFF0',
+			spacingTop: 10,
+			width : 400,
+			height : 400
+		},
+		mapNavigation: {
+			enabled: true,
+			buttonOptions: {
+				align: 'left',
+				verticalAlign: 'top',
+			}
+		},
+		colorAxis: {
+			//type: 'logarithmic',
+			endOnTick: false,
+			startOnTick: false,
+			min: 0,
+			max: 6,
+			//reversed:false,
+		},
+		legend:{                 
+			//layout: 'vertical',
+			//align: 'left',
+			//verticalAlign: 'bottom',
+		},
+		tooltip: {
+			valueSuffix: ' in/day',
+			footerFormat: '<span>(<em>Shift + Click to compare counties</em>)</span>'
+		},
+		credits: {
+			enabled: false
+		},
+		series : [{    	// map Data START here
+			data : data,
+			mapData: mapData,
+			joinBy: ['hc-key', 'code'],
+			name: '100-year retun period',
+			allowPointSelect: true,
+			cursor: 'pointer',
+			states: {
+				select: {
+					color: '#a4edba',
+					borderColor: 'black',
+					dashStyle: 'shortdot'
+				}
+			}
+		},
+		{	data : data,
+			mapData: mapData,
+			joinBy: ['hc-key', 'code'],
+			name: '100-year retun period',
+			allowPointSelect: true,
+			cursor: 'pointer',
+			states: {
+				select: {
+					color: '#a4edba',
+					borderColor: 'black',
+					dashStyle: 'shortdot'
+				}
+			}
+		}], 			// map Data END here       
+		navigation: {
+			buttonOptions: {
+				align: 'right',
+				enabled: true
+			}
+		}
+	}).highcharts(); // END of map chart Initiation 
+	// Pre-select a country
+	mapChart.get("us-ny-061").select();
+	/////////////////END the map 
+});  
+<!--JS HERE END ##################################################-->
+		</script>
+	</head>
+<!--HTML HERE Start =================================================-->
+<body>
+
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/maps/modules/map.js"></script>
+<script src="http://code.highcharts.com/mapdata/countries/us/us-ny-all.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
+<script src="countiesRP.js"></script>
+<script src="DataRPL.js"></script>
+<script src="DataRPU.js"></script>
+<script src="ts_in.js"></script>
+
+<div id="wrapper">
+	<div class="header"><h1>New York State extreme events by counties</h1></div>
+
+	<div id="container"></div>
+	<div id="info">
+
+		<span class="f32"><span id="flag"></span></span>
+		<h2></h2>
+		<!--  <div class="subheader">Click counties to view history</div> -->
+		<div id="RP-chart"></div>
+
+	</div>
+
+<div id="TS-chart"></div>
+
+</div>
+
+<div id="foot"><em><small>Prepared by: <a href="http://nysrise.org">NYSRISE</a> & <a href="http://crest.ccny.cuny.edu">NOAA-CREST</a></em></div>
+
+</body>
+<!--HTML HERE End ##################################################-->
+
+</html>
