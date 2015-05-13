@@ -1,3 +1,3 @@
 # ExtremeTest
 
-Click [here](https://rawgit.com/kashuk/Extreme/master/RP10.html).
+Click [here](http://rawgit.com/kashuk/Extreme/master/RP10.html).
