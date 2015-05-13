@@ -66,18 +66,38 @@ $(function () {
 	var cat= ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr'];			
 	var mapChart, RPchart, TSchart;
 	var data = [];
+	var pmax_line=0 // for 2 or more line
 			for (var code in counties) {
 				var value = null,
 					year,
 					itemData = counties[code].data,
 					i = itemData.length;
 					value = itemData[3]  // 100-yr return period
+					    if (itemData[itemData.length - 1] > pmax_line){
+					    pmax_line=itemData[itemData.length - 1]
+						} // finding max value for return period
 					data.push({
 						name: counties[code].name,
 						code: code,
 						value: value,
 					});
 			}
+			for (var code in counties) {
+				var value = null,
+					year,
+					itemData = counties[code].data,
+					i = itemData.length;
+					value = itemData[3]  // 100-yr return period
+					    if (itemData[itemData.length - 1] > pmax_line){
+					    pmax_line=itemData[itemData.length - 1]
+						} // finding max value for return period
+					data.push({
+						name: counties[code].name,
+						code: code,
+						value: value,
+					});
+			}		
+	var pmax=pmax_line
 	var mapData = Highcharts.geojson(Highcharts.maps['countries/us/us-ny-all']);
 
 	/////////////////START Return Period Chart
@@ -86,11 +106,20 @@ $(function () {
 	Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {   // Each time a change happen in map loop will restart
 		proceed.apply(this, Array.prototype.slice.call(arguments, 1));	
 		var points = mapChart.getSelectedPoints();
-		if (points.length) {	
+		if (points.length) {
+			pmax=pmax_line
 			try{  if (points.length === 1 && RPchart.series[0]) { 
-				RPchart = RPchart.destroy();TSchart = TSchart.destroy();}else{};  
+				RPchart = RPchart.destroy();TSchart = TSchart.destroy();
+				if(pmax<newdata[newdata.length - 1][2]){pmax=newdata[newdata.length - 1][2]} // just if is big margin
+				}else{pmax=pmax_line}; 
 				} // reset both charts if switching between counties
-			catch(err) {true} // continue if couldn't rest  
+			catch(err) {
+				newdata=[]
+				for (var ii = 0; ii < counties[points[0].code].data.length; ii++) {
+				newdata.push([cat[ii],rpl[points[0].code].data[ii],rpu[points[0].code].data[ii]])
+				}
+				if(pmax<newdata[newdata.length - 1][2]){pmax=newdata[newdata.length - 1][2]} // just if is big margin
+			} // continue if couldn't rest  
 			if (!RPchart) {
 				RPchart = $('#RP-chart').highcharts({
 				chart: {
@@ -116,7 +145,7 @@ $(function () {
 					categories: ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr']
 				},
 				yAxis: {
-					max:16,
+					max:pmax,
 					title:{text: 'Precipitation (in/day)'},
 					//opposite: true,
 				},
@@ -156,6 +185,7 @@ $(function () {
 					fillOpacity: 0.3,
 					zIndex: 0
 				})
+				if(pmax<newdata[newdata.length - 1][2]){pmax=newdata[newdata.length - 1][2]} // just if is big margin
 				var oldLen=RPchart.series.length-1;                    
 			} 
 			else { 
@@ -186,6 +216,7 @@ $(function () {
 				while (RPchart.series.length >  points.length) {
 					RPchart.series[RPchart.series.length - 1].remove(false);
 				}
+			pmax=pmax_line	
 			} // end of "if (points.length === 1) else"
 			RPchart.redraw();
 		} 
