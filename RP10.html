@@ -67,36 +67,29 @@ $(function () {
 	var mapChart, RPchart, TSchart;
 	var data = [];
 	var pmax_line=0 // for 2 or more line
-			for (var code in counties) {
-				var value = null,
-					year,
-					itemData = counties[code].data,
-					i = itemData.length;
-					value = itemData[3]  // 100-yr return period
-					    if (itemData[itemData.length - 1] > pmax_line){
-					    pmax_line=itemData[itemData.length - 1]
-						} // finding max value for return period
-					data.push({
-						name: counties[code].name,
-						code: code,
-						value: value,
-					});
-			}
-			for (var code in counties) {
-				var value = null,
-					year,
-					itemData = counties[code].data,
-					i = itemData.length;
-					value = itemData[3]  // 100-yr return period
-					    if (itemData[itemData.length - 1] > pmax_line){
-					    pmax_line=itemData[itemData.length - 1]
-						} // finding max value for return period
-					data.push({
-						name: counties[code].name,
-						code: code,
-						value: value,
-					});
-			}		
+		// Button in js
+		var contentType = 'text/csv';
+		var a = document.createElement("a");
+		document.body.appendChild(a);
+		a.style = "display: none";
+		
+		//define initial value 100 yr period//		
+		for (var code in counties) {
+			var value = null,
+				year,
+				itemData = counties[code].data,
+				i = itemData.length;
+				value = itemData[3]  // 100-yr return period
+					if (itemData[itemData.length - 1] > pmax_line){
+					pmax_line=itemData[itemData.length - 1]
+					} // finding max value for return period
+				data.push({
+					name: counties[code].name,
+					code: code,
+					value: value,
+				});
+		}
+		
 	var pmax=pmax_line
 	var mapData = Highcharts.geojson(Highcharts.maps['countries/us/us-ny-all']);
 
@@ -106,7 +99,14 @@ $(function () {
 	Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {   // Each time a change happen in map loop will restart
 		proceed.apply(this, Array.prototype.slice.call(arguments, 1));	
 		var points = mapChart.getSelectedPoints();
-		if (points.length) {
+		
+		
+		var rp_data=[]
+		for (var ii = 0; ii < points.length; ii++) {
+		rp_data.push('\n',counties[points[ii].code].data)
+		}
+		
+		if (points.length) {	
 			pmax=pmax_line
 			try{  if (points.length === 1 && RPchart.series[0]) { 
 				RPchart = RPchart.destroy();TSchart = TSchart.destroy();
@@ -225,6 +225,17 @@ $(function () {
 				RPchart = RPchart.destroy();	
 			}
 		}//end of "if (points.length) else"
+
+		// save rp_data by click
+		var csvFile = new Blob([rp_data], {type: contentType});
+		url = window.URL.createObjectURL(csvFile);
+		a.href = url;
+		a.download = 'RP_Data.csv';
+		$("#dl_button").click(function() {    //Jquery
+		   a.click();
+		   //window.URL.revokeObjectURL(url);
+		   document.removeChild(a);
+		});
 	});
 
 	/////////////////END Return Period Chart
@@ -414,12 +425,11 @@ $(function () {
 
 <div id="wrapper">
 	<div class="header"><h1>New York State extreme events by counties</h1></div>
-
 	<div id="container"></div>
 	<div id="info">
 
-		<span class="f32"><span id="flag"></span></span>
-		<h2></h2>
+		
+		<h2><button type="button" id="dl_button">Download data</button></h2>
 		<!--  <div class="subheader">Click counties to view history</div> -->
 		<div id="RP-chart"></div>
 
