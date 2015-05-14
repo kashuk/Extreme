@@ -63,15 +63,17 @@ $(function () {
 	Highcharts.setOptions({
 		colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
 	});
-	var cat= ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr'];			
+	var cat= ['5-yr','10-yr','50-yr','100-yr','250-yr','500-yr'];
+	var year_start=1949
 	var mapChart, RPchart, TSchart;
 	var data = [];
 	var pmax_line=0 // for 2 or more line
 		// Button in js
 		var contentType = 'text/csv';
-		var a = document.createElement("a");
-		document.body.appendChild(a);
-		a.style = "display: none";
+		var a_rp = document.createElement("a");
+		var a_ts = document.createElement("a");
+		document.getElementById("rp_button").style.display = "none";//Hide the button
+		document.getElementById("ts_button").style.display = "none";//Hide the button
 		
 		//define initial value 100 yr period//		
 		for (var code in counties) {
@@ -92,7 +94,6 @@ $(function () {
 		
 	var pmax=pmax_line
 	var mapData = Highcharts.geojson(Highcharts.maps['countries/us/us-ny-all']);
-
 	/////////////////START Return Period Chart
 
 	// Wrap point.select to get to the total selected points
@@ -101,10 +102,44 @@ $(function () {
 		var points = mapChart.getSelectedPoints();
 		
 		
+		// save data by click
 		var rp_data=[]
+		var ts_data=[]
+		var yrs=[]
+		//for (var =0; ii<ts[points[0].code].data.length)
+		for (var ii = 0; ii < ts[points[0].code].data.length; ii++) {yrs.push(ii+year_start)}
+		rp_data.push('','County','State',cat)
+		ts_data.push('','County','State',yrs)
 		for (var ii = 0; ii < points.length; ii++) {
-		rp_data.push('\n',counties[points[ii].code].data)
+		rp_data.push('<br />', counties[points[ii].code].name,counties[points[ii].code].data)
+		ts_data.push('\n',counties[points[ii].code].name,ts[points[ii].code].data)
 		}
+		//alert (ts_data)
+		//rp_data
+		document.getElementById("rp_button").style.display = ""; //show the button
+		var csv_rp = new Blob([rp_data], {type: contentType});
+		a_rp.style = "display: none";
+		a_rp.download = 'RP_Data.csv';
+		a_rp.href = window.URL.createObjectURL(csv_rp);
+		//ts data
+		document.getElementById("ts_button").style.display = ""; //show the button
+		var csv_ts = new Blob([ts_data], {type: contentType});
+		a_ts.style = "display: none";
+		a_ts.download = 'TS_Data.csv';
+		a_ts.href = window.URL.createObjectURL(csv_ts);
+		//a_ts.textContent = 'Download CSV'; // text download link
+		//document.body.appendChild(a_ts);
+		
+		$("#rp_button").click(function() {    //Jquery  rp
+		   a_rp.click();
+		   document.removeChild(a_rp);
+		});
+		
+		$("#ts_button").click(function() {    //Jquery ts
+		   a_ts.click();
+		   document.removeChild(a_ts);
+		});
+		
 		
 		if (points.length) {	
 			pmax=pmax_line
@@ -226,16 +261,6 @@ $(function () {
 			}
 		}//end of "if (points.length) else"
 
-		// save rp_data by click
-		var csvFile = new Blob([rp_data], {type: contentType});
-		url = window.URL.createObjectURL(csvFile);
-		a.href = url;
-		a.download = 'RP_Data.csv';
-		$("#dl_button").click(function() {    //Jquery
-		   a.click();
-		   //window.URL.revokeObjectURL(url);
-		   document.removeChild(a);
-		});
 	});
 
 	/////////////////END Return Period Chart
@@ -287,7 +312,7 @@ $(function () {
 							marker: {
 								enabled: true
 							},
-							pointStart: 1949,
+							pointStart: year_start,
 							pointInterval:1,
 						}
 					}
@@ -323,9 +348,10 @@ $(function () {
 				TSchart = TSchart.destroy();
 			}
 		} // end of "if (points2.length) else"
+			
 	});
 	/////////////////END TS chart 
-
+	
 	/////////////////START the map 
 	mapChart = $('#container').highcharts('Map', {      // Initiate the map chart     
 		title : {
@@ -404,7 +430,7 @@ $(function () {
 		}
 	}).highcharts(); // END of map chart Initiation 
 	// Pre-select a country
-	mapChart.get("us-ny-061").select();
+	//mapChart.get("us-ny-061").select();
 	/////////////////END the map 
 });  
 <!--JS HERE END ##################################################-->
@@ -429,7 +455,7 @@ $(function () {
 	<div id="info">
 
 		
-		<h2><button type="button" id="dl_button">Download data</button></h2>
+		<h2><button type="button" id="rp_button">Download data</button></h2>
 		<!--  <div class="subheader">Click counties to view history</div> -->
 		<div id="RP-chart"></div>
 
@@ -438,7 +464,7 @@ $(function () {
 <div id="TS-chart"></div>
 
 </div>
-
+		<h2><button type="button" id="ts_button">Download data</button></h2>
 <div id="foot"><em><small>Prepared by: <a href="http://nysrise.org">NYSRISE</a> & <a href="http://crest.ccny.cuny.edu">NOAA-CREST</a></em></div>
 
 </body>
