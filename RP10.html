@@ -108,14 +108,15 @@ $(function () {
 		var yrs=[]
 		//for (var =0; ii<ts[points[0].code].data.length)
 		for (var ii = 0; ii < ts[points[0].code].data.length; ii++) {yrs.push(ii+year_start)}
-		rp_data.push('','County','State',cat)
-		ts_data.push('','County','State',yrs)
+		rp_data[0]=['County','State',cat]// header
+		ts_data[0]=['County','State',yrs]// header
 		for (var ii = 0; ii < points.length; ii++) {
-		rp_data.push('<br />', counties[points[ii].code].name,counties[points[ii].code].data)
-		ts_data.push('\n',counties[points[ii].code].name,ts[points[ii].code].data)
+			rp_data[ii+1]=[counties[points[ii].code].name,counties[points[ii].code].data]
+			ts_data[ii+1]=[counties[points[ii].code].name,ts[points[ii].code].data]
 		}
-		//alert (ts_data)
-		//rp_data
+		rp_data=rp_data.join('\n')
+		ts_data=ts_data.join('\n')
+		//rp data
 		document.getElementById("rp_button").style.display = ""; //show the button
 		var csv_rp = new Blob([rp_data], {type: contentType});
 		a_rp.style = "display: none";
