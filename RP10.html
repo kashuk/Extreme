@@ -68,12 +68,7 @@ $(function () {
 	var mapChart, RPchart, TSchart;
 	var data = [];
 	var pmax_line=0 // for 2 or more line
-		// Button in js
-		var contentType = 'text/csv';
-		var a_rp = document.createElement("a");
-		var a_ts = document.createElement("a");
-		document.getElementById("rp_button").style.display = "none";//Hide the button
-		document.getElementById("ts_button").style.display = "none";//Hide the button
+
 		
 		//define initial value 100 yr period//		
 		for (var code in counties) {
@@ -108,40 +103,6 @@ $(function () {
 		var yrs=[]
 		//for (var =0; ii<ts[points[0].code].data.length)
 		for (var ii = 0; ii < ts[points[0].code].data.length; ii++) {yrs.push(ii+year_start)}
-		rp_data[0]=['County','State',cat]// header
-		ts_data[0]=['County','State',yrs]// header
-		for (var ii = 0; ii < points.length; ii++) {
-			rp_data[ii+1]=[counties[points[ii].code].name,counties[points[ii].code].data]
-			ts_data[ii+1]=[counties[points[ii].code].name,ts[points[ii].code].data]
-		}
-		rp_data=rp_data.join('\n')
-		ts_data=ts_data.join('\n')
-		//rp data
-		document.getElementById("rp_button").style.display = ""; //show the button
-		var csv_rp = new Blob([rp_data], {type: contentType});
-		a_rp.style = "display: none";
-		a_rp.download = 'RP_Data.csv';
-		a_rp.href = window.URL.createObjectURL(csv_rp);
-		//ts data
-		document.getElementById("ts_button").style.display = ""; //show the button
-		var csv_ts = new Blob([ts_data], {type: contentType});
-		a_ts.style = "display: none";
-		a_ts.download = 'TS_Data.csv';
-		a_ts.href = window.URL.createObjectURL(csv_ts);
-		//a_ts.textContent = 'Download CSV'; // text download link
-		//document.body.appendChild(a_ts);
-		
-		$("#rp_button").click(function() {    //Jquery  rp
-		   a_rp.click();
-		   document.removeChild(a_rp);
-		});
-		
-		$("#ts_button").click(function() {    //Jquery ts
-		   a_ts.click();
-		   document.removeChild(a_ts);
-		});
-		
-		
 		if (points.length) {	
 			pmax=pmax_line
 			try{  if (points.length === 1 && RPchart.series[0]) { 
@@ -460,8 +421,7 @@ $(function () {
 	<div id="info">
 
 		
-		<h2><button type="button" id="rp_button">Download data</button></h2>
-		<!--  <div class="subheader">Click counties to view history</div> -->
+
 		<div id="RP-chart"></div>
 
 	</div>
@@ -469,7 +429,6 @@ $(function () {
 <div id="TS-chart"></div>
 
 </div>
-		<h2><button type="button" id="ts_button">Download data</button></h2>
 <div id="foot"><em><small>Prepared by: <a href="http://nysrise.org">NYSRISE</a> & <a href="http://crest.ccny.cuny.edu">NOAA-CREST</a></em></div>
 
 </body>
