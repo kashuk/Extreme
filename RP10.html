@@ -228,7 +228,7 @@ $(function () {
 					newdata2.push([cat[ii],rpu[points[0].code].data[ii]])
 				}	
 				RPchart.addSeries({
-					name: 'HigherBond',
+					name: 'Upper Bound',
 					data: newdata2,
 					type:  'spline' ,
 					dashStyle: 'shortdash',
@@ -237,7 +237,7 @@ $(function () {
 
 				
 				RPchart.addSeries({
-					name: 'LowerBond',
+					name: 'Lower Bound',
 					data: newdata1,
 					type:  'spline' ,
 					dashStyle: 'shortdash',
