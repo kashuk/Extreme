@@ -93,26 +93,23 @@ $(function () {
 	var pmax=pmax_line
 	var mapData = Highcharts.geojson(Highcharts.maps['countries/us/us-ny-all']);
 	/////////////////START Return Period Chart
-
 	// Wrap point.select to get to the total selected points
 	Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {   // Each time a change happen in map loop will restart
+		
 		proceed.apply(this, Array.prototype.slice.call(arguments, 1));	
 		var points = mapChart.getSelectedPoints();
-		
-
-		
-		
-		
-		
 		
 		
 		// save data by click
 		var yrs=[]
 		//for (var =0; ii<ts[points[0].code].data.length)
 		for (var ii = 0; ii < ts[points[0].code].data.length; ii++) {yrs.push(ii+year_start)}
+		
+		
 		if (points.length) {	
+
 			pmax=pmax_line
-			try{  if (points.length === 1 && RPchart.series[0]) { 
+			try{  if (points.length === 1 ) { 
 				RPchart = RPchart.destroy();TSchart = TSchart.destroy();
 				if(pmax<newdata[newdata.length - 1][2]){pmax=newdata[newdata.length - 1][2]} // just if is big margin
 				}else{pmax=pmax_line}; 
@@ -123,26 +120,17 @@ $(function () {
 				newdata.push([cat[ii],rpl[points[0].code].data[ii],rpu[points[0].code].data[ii]])
 				}
 				if(pmax<newdata[newdata.length - 1][2]){pmax=newdata[newdata.length - 1][2]} // just if is big margin
-			} // continue if couldn't reset  
-			if (!RPchart) {
-			
-			
-					//fix the drop down menu
-		
-		Highcharts.getOptions().exporting.buttons.contextButton.menuItems.push(
-		{
-            text:'Print Chart',
-            onclick: function () { this.print(); }
-        },
-		{
-            separator: true
-        },
-		Highcharts.getOptions().exporting.buttons.contextButton.menuItems[6],
-		Highcharts.getOptions().exporting.buttons.contextButton.menuItems[7]
-		);
-		
-			
+			} // continue if couldn't reset  		
+			 //(!RPchart) {
+
+				//fix the drop down menu
+				Highcharts.getOptions().exporting.buttons.contextButton.menuItems.push(
+				{text:'Print Chart',onclick: function () { this.print(); } },
+				{separator: true},
+				Highcharts.getOptions().exporting.buttons.contextButton.menuItems[6],
+				Highcharts.getOptions().exporting.buttons.contextButton.menuItems[7]);
 				RPchart = $('#RP-chart').highcharts({
+				
 				chart: {
 					height: 500,
 					width: 500,
@@ -178,7 +166,7 @@ $(function () {
 									y:0 ,
 									text: 'Export',
 									// Use only the download related menu items from the default context button
-									menuItems: Highcharts.getOptions().exporting.buttons.contextButton.menuItems.splice(8)
+									menuItems: Highcharts.getOptions().exporting.buttons.contextButton.menuItems.splice(Highcharts.getOptions().exporting.buttons.contextButton.menuItems.length-4)
 								},
 								
 							}
@@ -220,7 +208,7 @@ $(function () {
 				}
 				}
 				).highcharts();
-			}// end of "if (!RPchart)"
+			// end of "if (!RPchart)"
 			 if (points.length === 1) {	// check when margin mode
 				// add basic line
 				RPchart.addSeries({
@@ -269,9 +257,9 @@ $(function () {
 			
 			else if (points.length === 2) {	// check when margin mode
 				// add basic line
-				RPchart.series[2].remove(false);
-				RPchart.series[1].remove(false);				
-				RPchart.series[0].remove(false);
+			//	RPchart.series[2].remove(false);
+			//	RPchart.series[1].remove(false);				
+				//RPchart.series[0].remove(false);
 				RPchart.addSeries({
 					name: points[0].name,
 					data: counties[points[0].code].data,
@@ -437,6 +425,7 @@ $(function () {
 						name: this.name,
 						data: ts[this.code].data,
 						type: 'spline',
+						color: clr[i],
 					}, false);
 				} 
 				else {
@@ -444,6 +433,8 @@ $(function () {
 						name: this.name,
 						data: ts[this.code].data,
 						type: 'spline',
+						color: clr[i],
+						
 						//type: points2.length >1 ? 'line' : 'area',
 					});
 				}
